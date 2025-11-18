@@ -12,6 +12,7 @@ import Data.Foldable (for_)
 import GHC.Generics (Generic)
 import Data.Aeson (ToJSON, FromJSON, encode, decode)
 import qualified Data.ByteString.Lazy.Char8 as BL8
+import System.Random (mkStdGen, randomR, StdGen)
 
 ------------------------------------------------------------
 -- Quaternion Type
@@ -49,10 +50,11 @@ qMul (Q a b c d) (Q e f g h) =
     (a*g - b*h + c*e + d*f)
     (a*h + b*g - c*f + d*e)
 
-qNormalize :: Quaternion -> Quaternion
-qNormalize q@(Q a b c d) =
-  let n = sqrt (qNorm2 q)
-  in if n == 0 then Q 1 0 0 0 else qScale (1 / n) q
+qNormalize :: Bool -> Quaternion -> Quaternion
+qNormalize normalize q@(Q a b c d) =
+  if not normalize then q
+  else let n = sqrt (qNorm2 q)
+       in if n == 0 then Q 1 0 0 0 else qScale (1 / n) q
 
 ------------------------------------------------------------
 -- SLERP
@@ -68,11 +70,11 @@ slerp qa qb t
           theta = acos (min 1 dot)
           sinTheta = sin theta
       in if sinTheta < 1e-6
-           then qNormalize $ qAdd qa (qScale t (qSub qb qa))
+           then qNormalize True $ qAdd qa (qScale t (qSub qb qa))
            else
              let a = sin ((1 - t) * theta) / sinTheta
                  b = sin (t * theta) / sinTheta
-             in qNormalize $ qAdd (qScale a qa) (qScale b qb)
+             in qNormalize True $ qAdd (qScale a qa) (qScale b qb)
 
 ------------------------------------------------------------
 -- Hyperkähler Triple
@@ -126,7 +128,7 @@ applyHead (AttHead om w) q = qScale w (om q)
 
 applyMultiHead :: [AttentionHead] -> Quaternion -> Quaternion
 applyMultiHead hs q =
-  qNormalize (foldl qAdd (Q 0 0 0 0) (map (\h -> applyHead h q) hs))
+  qNormalize True (foldl qAdd (Q 0 0 0 0) (map (\h -> applyHead h q) hs))
 
 mkHeads :: Int -> Double -> [AttentionHead]
 mkHeads n s =
@@ -141,20 +143,21 @@ mkHeads n s =
 
 data QRNN = QRNN
   { rnnState :: Quaternion
-  , rnnStep  :: Quaternion -> Quaternion -> Quaternion
+  , rnnWeights :: (Double, Double, Double) -- (prev, input, interaction)
+  , rnnStep  :: (Double, Double, Double) -> Quaternion -> Quaternion -> Quaternion
   }
 
-qrnnStepSample :: Quaternion -> Quaternion -> Quaternion
-qrnnStepSample p i =
-  qNormalize $
-    qAdd (qScale 0.6 p)
-    (qAdd (qScale 0.4 i) (qScale 0.05 (qMul p i)))
+qrnnStepSample :: (Double, Double, Double) -> Quaternion -> Quaternion -> Quaternion
+qrnnStepSample (wPrev, wInput, wInteract) p i =
+  qNormalize True $
+    qAdd (qScale wPrev p)
+         (qAdd (qScale wInput i) (qScale wInteract (qMul p i)))
 
-mkQRNN :: Quaternion -> QRNN
-mkQRNN q = QRNN q qrnnStepSample
+mkQRNN :: Quaternion -> (Double, Double, Double) -> QRNN
+mkQRNN q weights = QRNN q weights (qrnnStepSample)
 
 qrnnUpdate :: QRNN -> Quaternion -> QRNN
-qrnnUpdate st inp = st { rnnState = rnnStep st (rnnState st) inp }
+qrnnUpdate st inp = st { rnnState = rnnStep st (rnnWeights st) (rnnState st) inp }
 
 ------------------------------------------------------------
 -- Evolution
@@ -165,6 +168,7 @@ data Evolution = Evolution
   , evoOmega    :: Omega
   , evoAttHeads :: [AttentionHead]
   , evoQRNN     :: QRNN
+  , evoNormalize :: Bool
   }
 
 evolveStep :: Double -> Evolution -> Quaternion -> (Evolution, Quaternion)
@@ -172,7 +176,7 @@ evolveStep t evo q =
   let att = applyMultiHead (evoAttHeads evo) q
       om  = evoOmega evo (qAdd q att)
       r'  = qrnnUpdate (evoQRNN evo) om
-      qNext = qNormalize (rnnState r')
+      qNext = qNormalize (evoNormalize evo) (rnnState r')
       qSmooth = slerp q qNext t
   in (evo { evoQRNN = r' }, qSmooth)
 
@@ -195,30 +199,39 @@ data Frame = Frame
 instance ToJSON Frame
 
 ------------------------------------------------------------
--- API Input (JSON)
+-- API Input
 ------------------------------------------------------------
 
 data APIInput = APIInput
   { slerpFactor :: Double
   , frames      :: Int
   , initQuat    :: Maybe Quaternion
+  , numHeads    :: Maybe Int
+  , omegaScale  :: Maybe Double
+  , rnnWeightsAPI :: Maybe (Double, Double, Double) -- renamed to avoid conflict
+  , normalize   :: Maybe Bool
+  , seed        :: Maybe Int
   } deriving (Show, Generic)
 
 instance FromJSON APIInput
 
 ------------------------------------------------------------
--- Main (Playground-ready with hardcoded JSON)
+-- Main
 ------------------------------------------------------------
 
 main :: IO ()
 main = do
-  -- Hardcoded JSON string for playground testing
-  let inputJson = "{\"slerpFactor\":0.2,\"frames\":120,\"initQuat\":{\"q0\":1,\"q1\":0.1,\"q2\":0.2,\"q3\":0.3}}"
+  let inputJson = "{\"slerpFactor\":0.2,\"frames\":120,\"initQuat\":{\"q0\":1,\"q1\":0.1,\"q2\":0.2,\"q3\":0.3},\"numHeads\":4,\"omegaScale\":0.05,\"rnnWeightsAPI\":[0.6,0.4,0.05],\"normalize\":true,\"seed\":42}"
   case decode (BL8.pack inputJson) :: Maybe APIInput of
     Nothing -> putStrLn "{\"error\":\"Invalid JSON input\"}"
-    Just (APIInput t n maybeQ0) -> do
-      let q0 = qNormalize $ maybe (Q 1 0.1 0.2 0.3) id maybeQ0
-          evo0 = Evolution defaultHK (omegaSample 0.05) (mkHeads 4 0.02) (mkQRNN q0)
-          (_, trace) = evolveRun t n evo0 q0
+    Just input -> do
+      let q0 = qNormalize (maybe True id (normalize input))
+               $ maybe (Q 1 0.1 0.2 0.3) id (initQuat input)
+          numH = maybe 4 id (numHeads input)
+          omegaS = maybe 0.05 id (omegaScale input)
+          rnnW = maybe (0.6,0.4,0.05) id (rnnWeightsAPI input)
+          normalizeFlag = maybe True id (normalize input)
+          evo0 = Evolution defaultHK (omegaSample omegaS) (mkHeads numH omegaS) (mkQRNN q0 rnnW) normalizeFlag
+          (_, trace) = evolveRun (slerpFactor input) (frames input) evo0 q0
           arr = zipWith Frame [0..] trace
       BL8.putStrLn (encode arr)
