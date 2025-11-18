@@ -1,29 +1,24 @@
+# Hyperkähler Quaternion Evolution API (HKStack 8.0)
 
-# SimpleCategory (Haskell)
+## Overview
 
-This is an ASCII/Unicode‑compliant minimal representation of core
-Category‑Theory constructs implemented in Haskell.
+This API implements a **quaternionic evolution engine** leveraging:
 
-## Features
+- **Hyperkähler triples** (i, j, k operators)
+- **Omega potentials** for dynamic quaternion transformations
+- **Multi-head attention**
+- **Quaternionic RNN** for state evolution
+- **SLERP interpolation** for smooth transitions
 
-- `Category` typeclass with identity and composition (`⊚` and ASCII `.`)
-- Functor (`FunctorF`)
-- Natural transformations (`Nat`)
-- A minimal `MonadM` class with ASCII‑safe `bindM` and `returnM`
-- Fully self‑contained, no external libraries
+It produces **JSON arrays of frames**, each containing a normalized quaternion.
 
-## Compatibility
+---
 
-- Works in GHCi or any standard Haskell compiler.
-- All Unicode operators have ASCII fallbacks.
+## API Input
 
-## Run
-
-```
-ghci SimpleCategory.hs
-```
-
-## Purpose
-
-This demonstrates how Haskell natively models categorical structure,
-in a way that closely corresponds to mathematical category theory.
+```json
+{
+  "slerpFactor": 0.2,
+  "frames": 120,
+  "initQuat": { "q0": 1, "q1": 0.1, "q2": 0.2, "q3": 0.3 }
+}
