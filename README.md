@@ -83,3 +83,19 @@ JSON object fields:
   "q2": 0.2,
   "q3": 0.3
 }
+## API Output Format
+
+The API returns a **JSON array of frames**, where each frame represents the quaternion state after an evolution step. Example:
+
+```json
+[
+  {
+    "frameIndex": 0,
+    "quaternion": { "q0": 1.0, "q1": 0.1, "q2": 0.2, "q3": 0.3 }
+  },
+  {
+    "frameIndex": 1,
+    "quaternion": { "q0": 0.998, "q1": 0.102, "q2": 0.198, "q3": 0.301 }
+  },
+  ...
+]
