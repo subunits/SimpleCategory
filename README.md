@@ -83,3 +83,32 @@ JSON object fields:
   "q2": 0.2,
   "q3": 0.3
 }
+
+# HyperK Stack 9.0 - Single File
+
+**HyperK Stack 9.0** is a single-file Haskell scaffold implementing:
+
+- Typed differential forms (D0, D1, D2)
+- Symplectic smart constructor with numeric checks (toy example)
+- Lagrangian / Action placeholders
+- Noether placeholder
+- Compliance JSON export
+
+This scaffold is fully ASCII and Unicode-friendly, intended for rapid prototyping, experimentation, and open-source publication.
+
+---
+
+## Files
+
+- `HyperK_Stack9_Single.hs` — main Haskell source file
+- `README_HyperK_Stack9.md` — this README
+
+---
+
+## Requirements
+
+- GHC >= 9.0
+- Packages: `aeson`, `bytestring`, `time`
+- Optional: `stack` or `cabal` for building
+
+---
