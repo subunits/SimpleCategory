@@ -1,10 +1,15 @@
-# Hyperkähler Stack 8.0 – Full API and Playground Documentation
+# Hyperkähler Stack 8.0 & HyperK Stack 9.0 - Full Documentation
 
-This Haskell module implements Hyperkähler Stack 8.0, a quaternion-based evolution framework with attention, quaternionic RNN, omega potential, and SLERP interpolation. The API outputs a JSON array of quaternion frames suitable for downstream applications, visualization, or machine learning pipelines.
+This repository contains:
+
+1. **Hyperkähler Stack 8.0** — quaternion-based evolution framework with attention, QRNN, omega potential, and SLERP.
+2. **HyperK Stack 9.0** — single-file Haskell scaffold implementing differential forms (D0, D1, D2), symplectic construction, Lagrangian/Action placeholders, Noether placeholders, and compliance JSON export.
+
+Both stacks are Unicode- and ASCII-safe, intended for rapid prototyping, experimentation, and open-source publication.
 
 ---
 
-## Features
+## Hyperkähler Stack 8.0 - Features
 
 - Quaternion arithmetic: `qAdd`, `qSub`, `qMul`, `qScale`, `qNormalize`, `qConj`
 - Hyperkähler triple operations: `iOp`, `jOp`, `kOp`
@@ -12,12 +17,10 @@ This Haskell module implements Hyperkähler Stack 8.0, a quaternion-based evolut
 - Multi-head quaternionic attention
 - Quaternionic RNN with configurable weights
 - SLERP interpolation for smooth transitions
-- JSON API output: array of frames
+- JSON API output: array of quaternion frames
 - Unicode and ASCII-safe output
 
----
-
-## Module Structure
+### Module Structure
 
 1. **Quaternion Type**
    - `data Quaternion = Q { q0, q1, q2, q3 :: Double }`
@@ -55,9 +58,7 @@ This Haskell module implements Hyperkähler Stack 8.0, a quaternion-based evolut
    - `evolveRun` iterates for N frames
    - Produces an array of quaternions representing the system's evolution
 
----
-
-## API Input Parameters
+### API Input Parameters
 
 JSON object fields:
 
@@ -74,17 +75,7 @@ JSON object fields:
 
 ---
 
-## Quaternion Format
-
-```json
-{
-  "q0": 1.0,
-  "q1": 0.1,
-  "q2": 0.2,
-  "q3": 0.3
-}
-
-# HyperK Stack 9.0 - Single File
+## HyperK Stack 9.0 - Single File
 
 **HyperK Stack 9.0** is a single-file Haskell scaffold implementing:
 
@@ -96,19 +87,13 @@ JSON object fields:
 
 This scaffold is fully ASCII and Unicode-friendly, intended for rapid prototyping, experimentation, and open-source publication.
 
----
-
-## Files
+### Files
 
 - `HyperK_Stack9_Single.hs` — main Haskell source file
 - `README_HyperK_Stack9.md` — this README
 
----
-
-## Requirements
+### Requirements
 
 - GHC >= 9.0
 - Packages: `aeson`, `bytestring`, `time`
 - Optional: `stack` or `cabal` for building
-
----
