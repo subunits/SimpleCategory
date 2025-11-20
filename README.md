@@ -1,99 +1,47 @@
-# Hyperkähler Stack 8.0 & HyperK Stack 9.0 - Full Documentation
+# HyperK Stack - Full Documentation (v8.0 → v11.0)
 
-This repository contains:
+This repository documents the evolution of HyperK Stack Haskell frameworks from **v8.0 → v11.0**, progressively adding quaternionic dynamics, differential forms, symplectic verification, variational mechanics scaffolds, SLERP interpolation, and full auditable computation.
 
-1. **Hyperkähler Stack 8.0** — quaternion-based evolution framework with attention, QRNN, omega potential, and SLERP.
-2. **HyperK Stack 9.0** — single-file Haskell scaffold implementing differential forms (D0, D1, D2), symplectic construction, Lagrangian/Action placeholders, Noether placeholders, and compliance JSON export.
-
-Both stacks are Unicode- and ASCII-safe, intended for rapid prototyping, experimentation, and open-source publication.
+All versions are **ASCII and Unicode-safe**, auditable, reproducible, and intended for research, experimentation, and open-source publication.
 
 ---
 
-## Hyperkähler Stack 8.0 - Features
+## Version Overview
 
-- Quaternion arithmetic: `qAdd`, `qSub`, `qMul`, `qScale`, `qNormalize`, `qConj`
-- Hyperkähler triple operations: `iOp`, `jOp`, `kOp`
-- Omega potential: `omegaSample`
-- Multi-head quaternionic attention
-- Quaternionic RNN with configurable weights
-- SLERP interpolation for smooth transitions
-- JSON API output: array of quaternion frames
-- Unicode and ASCII-safe output
-
-### Module Structure
-
-1. **Quaternion Type**
-   - `data Quaternion = Q { q0, q1, q2, q3 :: Double }`
-   - Basic operations: addition, subtraction, multiplication, scaling, conjugate, normalization
-   - JSON serialization via `ToJSON` and `FromJSON` instances
-
-2. **Hyperkähler Triple**
-   - `data HKStruct = HK { iOp, jOp, kOp :: Quaternion -> Quaternion }`
-   - Default operators use left multiplication by quaternion units (`iUnit`, `jUnit`, `kUnit`)
-   - Supports quaternionic rotations in 3D manifold
-
-3. **Omega Potential**
-   - `omegaSample :: Double -> Quaternion -> Quaternion`
-   - Provides phase-based rotation along quaternion components
-   - Used in attention heads and evolution
-
-4. **Quaternionic Attention**
-   - `data AttentionHead = AttHead { ahOmega :: Omega, ahWeight :: Double }`
-   - Multi-head attention: normalized sum of weighted quaternion transformations
-   - Configurable number of heads (`numHeads`) and omega scaling
-
-5. **Quaternionic RNN**
-   - `data QRNN = QRNN { rnnState :: Quaternion, rnnStep :: Quaternion -> Quaternion -> Quaternion }`
-   - Evolution step combines previous state, input, and interaction: `qrnnStepSample`
-   - QRNN weights configurable: `(prevWeight, inputWeight, interactionWeight)` via `rnnWeightsAPI`
-   - Normalization can be toggled
-
-6. **SLERP Interpolation**
-   - Smooth interpolation between consecutive quaternions
-   - Factor controlled via `slerpFactor` (0 = no movement, 1 = full step)
-   - Handles near-identical quaternions to avoid numerical instability
-
-7. **Evolution Loop**
-   - `evolveStep` applies attention, omega potential, QRNN, normalization, and optional SLERP
-   - `evolveRun` iterates for N frames
-   - Produces an array of quaternions representing the system's evolution
-
-### API Input Parameters
-
-JSON object fields:
-
-| Field            | Type                   | Default                         | Description |
-|------------------|-----------------------|---------------------------------|-------------|
-| `slerpFactor`    | Double                | 0.2                             | SLERP interpolation factor per step |
-| `frames`         | Int                   | 120                             | Number of evolution steps |
-| `initQuat`       | Quaternion            | {q0:1,q1:0.1,q2:0.2,q3:0.3}    | Initial quaternion |
-| `numHeads`       | Int                   | 4                               | Number of attention heads |
-| `omegaScale`     | Double                | 0.05                            | Omega potential scaling factor |
-| `rnnWeightsAPI`  | [Double,Double,Double]| [0.6,0.4,0.05]                  | QRNN weights (prev, input, interaction) |
-| `normalize`      | Bool                  | true                            | Normalize quaternion after each step |
-| `seed`           | Int                   | random                          | Random seed for reproducibility |
+| Version | Key Features |
+|---------|--------------|
+| **8.0** | Quaternion arithmetic, Hyperkähler triple, omega potential, multi-head attention, QRNN, SLERP, JSON API output |
+| **9.0** | Single-file Haskell scaffold, typed differential forms (D0,D1,D2), symplectic smart constructor, Lagrangian/Action and Noether placeholders, compliance JSON |
+| **10.0** | Fully auditable single-file runtime, typed forms up to D4, symplectic kernel with numeric proofs, Euler-Lagrange scaffolds, quaternion/SLERP placeholders, full kernel control |
+| **11.0** | Extended forms and tangent spaces, higher-degree kernels, integrated manifold evolution placeholders, enhanced JSON compliance, full reproducibility, single-file optimized Haskell machine |
 
 ---
 
-## HyperK Stack 9.0 - Single File
+## Core Concepts Across Versions
 
-**HyperK Stack 9.0** is a single-file Haskell scaffold implementing:
+- **Differential Forms:** Typed (D0–D4) functions over points/tangents for mathematical correctness
+- **Symplectic Verification:** Closed and non-degenerate numeric checks producing verifiable proofs
+- **Variational Mechanics:** Euler-Lagrange scaffolds, action functionals, and conserved quantity placeholders
+- **Quaternionic Dynamics:** Quaternion arithmetic, Hyperkähler triple operations, SLERP interpolation, multi-head attention
+- **Auditable JSON Output:** Compliance reports capturing invariants, proofs, and timestamps
+- **Single-file Haskell Runtime:** Easily compiled and integrated into pipelines, research, or experimentation
 
-- Typed differential forms (D0, D1, D2)
-- Symplectic smart constructor with numeric checks (toy example)
-- Lagrangian / Action placeholders
-- Noether placeholder
-- Compliance JSON export
+---
 
-This scaffold is fully ASCII and Unicode-friendly, intended for rapid prototyping, experimentation, and open-source publication.
+## Files
 
-### Files
+- `HyperK_Stack8_API.hs` — Full quaternionic API (v8.0)
+- `HyperK_Stack9_Single.hs` — Single-file differential forms scaffold (v9.0)
+- `HyperK_Stack10.hs` — Fully auditable single-file machine (v10.0)
+- `HyperK_Stack11.hs` — Optimized runtime with higher-degree forms and manifold kernels (v11.0)
+- `README_HyperK_Full.md` — This document
 
-- `HyperK_Stack9_Single.hs` — main Haskell source file
-- `README_HyperK_Stack9.md` — this README
+---
 
-### Requirements
+## Requirements
 
 - GHC >= 9.0
 - Packages: `aeson`, `bytestring`, `time`
 - Optional: `stack` or `cabal` for building
+```bash
+ghc -o HyperK_StackN HyperK_StackN.hs
